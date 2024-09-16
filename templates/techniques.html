@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}Your Techniques{% endblock %}
+
+{% block content %}
+<h2>Techniques You've Added</h2>
+<div class="form-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if techniques %}
+                {% for technique in techniques %}
+                <tr>
+                    <td>{{ technique.name }}</td>
+                    <td>{{ technique.description }}</td>
+                    <td>
+                        <form action="{{ url_for('delete_technique', technique_id=technique.id) }}" method="POST">
+                            <button type="submit" class="btn-delete">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3">You haven't added any techniques yet.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Optionally, a button to add a new technique -->
+<div class="form-container">
+    <form action="{{ url_for('add_technique') }}" method="get">
+        <button type="submit" class="btn">Add New Technique</button>
+    </form>
+</div>
+{% endblock %}

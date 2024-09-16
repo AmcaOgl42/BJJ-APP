@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import MySQLdb.cursors, re, hashlib
@@ -48,7 +48,7 @@ def login():
             session['id'] = account['id']
             session['username'] = account['username']
             # Redirect to home page
-            print(session['username'])
+            print(session['id'])
             return redirect(url_for('home'))
         else:
             # Account doesnt exist or username/password incorrect
@@ -113,12 +113,15 @@ def register():
 #-------------------------------------------------------------------------------------------------------
 
 # http://localhost:5000/pythonlogin/home - this will be the home page, only accessible for logged in users
-@app.route('/pythonlogin/home')
+@app.route('/')
 def home():
     # Check if the user is logged in
     if 'loggedin' in session:
         # User is loggedin show them the home page
-        return render_template('home.html', username=session['username'])
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM trainingsdaten WHERE user_id = %s', (session['id'],))
+        training_data = cursor.fetchone()
+        return render_template('home.html', username=session['username'], training_data=training_data)
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
@@ -128,12 +131,116 @@ def home():
 @app.route('/pythonlogin/profile')
 def profile():
     # Check if the user is logged in
-    if 'loggedin' in session:
-        # We need all the account info for the user so we can display it on the profile page
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+    # We need all the account info for the user so we can display it on the profile page
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
+    account = cursor.fetchone()
+    # Show the profile page with account info
+    return render_template('profile.html', account=account)
+
+#-------------------------------------------------------------------------------------------------------
+
+@app.route('/add_session', methods=['GET', 'POST'])
+def add_session():
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        # Retrieve form data
+        session_date = request.form['date']
+        sparring_matches = int(request.form['sparring_matches'])
+        injuries = request.form.get('injuries', '')
+        taps = int(request.form['taps'])
+        user_id = session['id']
+
+        # Create a new session entry
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
-        account = cursor.fetchone()
-        # Show the profile page with account info
-        return render_template('profile.html', account=account)
-    # User is not logged in redirect to login page
-    return redirect(url_for('login'))
+        cursor.execute('INSERT INTO sessions (user_id, date, sparring_matches, injuries, taps) VALUES (%s, %s, %s, %s, %s)', 
+                       (user_id, session_date, sparring_matches, injuries, taps))
+        mysql.connection.commit()
+
+        # Update the cumulative totals in trainingsdaten
+        cursor.execute('SELECT * FROM trainingsdaten WHERE user_id = %s', (user_id,))
+        training_data = cursor.fetchone()
+        
+        if training_data:
+            # Aggregate injuries
+            
+
+            cursor.execute('UPDATE trainingsdaten SET training_sessions = training_sessions + 1, '
+                           'sparring_matches = sparring_matches + %s, '
+                           'injuries = injuries + %s, '
+                           'taps = taps + %s '
+                           'WHERE user_id = %s', 
+                           (sparring_matches, injuries, taps, user_id))
+        else:
+            cursor.execute('INSERT INTO trainingsdaten (user_id, training_sessions, sparring_matches, injuries, taps) VALUES (%s, %s, %s, %s, %s)', 
+                           (user_id, 1, sparring_matches, injuries, taps))
+
+        mysql.connection.commit()
+        cursor.close()
+
+        flash('Session added successfully!', 'success')
+        return redirect(url_for('home'))
+
+    return render_template('add_session.html')
+
+
+#-------------------------------------------------------------------------------------------------------
+
+
+@app.route('/add_technique', methods=['GET', 'POST'])
+def add_technique():
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        # Retrieve form data
+        name = request.form['name']
+        description = request.form['description']
+        user_id = session['id']
+
+        # Create a new session entry
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('INSERT INTO techniques (user_id, name, description) VALUES (%s, %s, %s)', 
+                       (user_id, name, description))
+        mysql.connection.commit()
+        cursor.close()
+
+        flash('Technique added successfully!', 'success')
+        return redirect(url_for('home'))
+
+    return render_template('add_technique.html')
+
+#-------------------------------------------------------------------------------------------------------
+
+@app.route('/techniques')
+def list_techniques():
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM techniques WHERE user_id = %s', (session['id'],))
+    techniques = cursor.fetchall()
+    cursor.close()
+
+    return render_template('techniques.html', techniques=techniques)
+
+
+#-------------------------------------------------------------------------------------------------------
+
+
+@app.route('/delete_technique/<int:technique_id>', methods=['POST'])
+def delete_technique(technique_id):
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    # Ensure the technique belongs to the current user before deleting
+    cursor.execute('DELETE FROM techniques WHERE id = %s AND user_id = %s', (technique_id, session['id']))
+    mysql.connection.commit()
+    cursor.close()
+
+    flash('Technique deleted successfully!', 'success')
+    return redirect(url_for('list_techniques'))

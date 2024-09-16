@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="content">
+    <h2>Add Technique</h2>
+    <div class="form-container">
+        <form action="{{ url_for('add_technique') }}" method="post">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br>
+
+            <label for="description">Description:</label>
+            <input type="text" id="description" name="description" required><br>
+
+            <input type="submit" value="Add Technique">
+        </form>
+    </div>
+</div>
+{% endblock %}

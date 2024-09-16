@@ -145,3 +145,62 @@ body.loggedin {
   padding: 5px;
   margin: 0 0 10px 0;
 }
+.form-container {
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 0 9px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+/* Form labels */
+.form-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #4a536e;
+}
+
+/* Form input fields */
+.form-container input[type="date"],
+.form-container input[type="number"],
+.form-container input[type="text"] {
+    width: calc(100% - 22px);
+    height: 40px;
+    border: 1px solid #dee0e4;
+    margin-bottom: 15px;
+    padding: 0 10px;
+    border-radius: 4px;
+}
+
+/* Submit button */
+.form-container input[type="submit"] {
+    width: 100%;
+    padding: 15px;
+    background-color: #3274d6;
+    border: 0;
+    cursor: pointer;
+    font-weight: bold;
+    color: #ffffff;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.form-container input[type="submit"]:hover {
+    background-color: #2868c7;
+    transition: background-color 0.2s;
+}
+.btn-delete {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #d9534f;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-delete:hover {
+    background-color: #c9302c;
+}

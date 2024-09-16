@@ -1,8 +1,35 @@
-{% extends 'layout.html' %}
+{% extends "layout.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Training Data{% endblock %}
 
 {% block content %}
-<h2>Training</h2>
-<p>Welcome back, {{ username }}!</p>
+<h2>Your Training Data</h2>
+<div class="form-container">
+    <table>
+        <tr>
+            <td><strong>Total Training Sessions:</strong></td>
+            <td>{{ training_data.training_sessions }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Sparring Matches:</strong></td>
+            <td>{{ training_data.sparring_matches }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Injuries:</strong></td>
+            <td>{{ training_data.injuries }}</td>
+        </tr>
+        <tr>
+            <td><strong>Total Taps:</strong></td>
+            <td>{{ training_data.taps }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Add Session Button -->
+<div class="form-container">
+    <form action="{{ url_for('add_session') }}" method="get">
+        <button type="submit" class="btn">Add Training Session</button>
+    </form>
+</div>
+
 {% endblock %}

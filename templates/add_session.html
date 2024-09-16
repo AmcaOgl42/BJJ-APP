@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="content">
+    <h2>Add Training Session</h2>
+    <div class="form-container">
+        <form action="{{ url_for('add_session') }}" method="post">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required><br>
+
+            <label for="sparring_matches">Sparring Matches:</label>
+            <input type="number" id="sparring_matches" name="sparring_matches" min="0" required><br>
+
+            <label for="injuries">Injuries:</label>
+            <input type="text" id="injuries" name="injuries"><br>
+
+            <label for="taps">Taps:</label>
+            <input type="number" id="taps" name="taps" min="0" required><br>
+
+            <input type="submit" value="Add Session">
+        </form>
+    </div>
+</div>
+{% endblock %}
