@@ -8,19 +8,19 @@
     <table>
         <tr>
             <td><strong>Total Training Sessions:</strong></td>
-            <td>{{ training_data.training_sessions }}</td>
+            <td>{{ training_data.training_sessions or 0 }}</td>
         </tr>
         <tr>
             <td><strong>Total Sparring Matches:</strong></td>
-            <td>{{ training_data.sparring_matches }}</td>
+            <td>{{ training_data.sparring_matches or 0 }}</td>
         </tr>
         <tr>
             <td><strong>Total Injuries:</strong></td>
-            <td>{{ training_data.injuries }}</td>
+            <td>{{ training_data.injuries or 0 }}</td>
         </tr>
         <tr>
             <td><strong>Total Taps:</strong></td>
-            <td>{{ training_data.taps }}</td>
+            <td>{{ training_data.taps or 0 }}</td>
         </tr>
     </table>
 </div>

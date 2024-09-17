@@ -117,13 +117,22 @@ def register():
 def home():
     # Check if the user is logged in
     if 'loggedin' in session:
-        # User is loggedin show them the home page
+        # User is logged in, show them the home page
+        user_id = session['id']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM trainingsdaten WHERE user_id = %s', (session['id'],))
+
+        # Get aggregated training data from the sessions table
+        cursor.execute('SELECT COUNT(*) AS training_sessions, '
+                       'SUM(sparring_matches) AS sparring_matches, '
+                       'SUM(injuries) AS injuries, '
+                       'SUM(taps) AS taps '
+                       'FROM sessions WHERE user_id = %s', (user_id,))
         training_data = cursor.fetchone()
+
         return render_template('home.html', username=session['username'], training_data=training_data)
-    # User is not loggedin redirect to login page
+    # User is not logged in, redirect to login page
     return redirect(url_for('login'))
+
 
 #-------------------------------------------------------------------------------------------------------
 
@@ -158,26 +167,6 @@ def add_session():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('INSERT INTO sessions (user_id, date, sparring_matches, injuries, taps) VALUES (%s, %s, %s, %s, %s)', 
                        (user_id, session_date, sparring_matches, injuries, taps))
-        mysql.connection.commit()
-
-        # Update the cumulative totals in trainingsdaten
-        cursor.execute('SELECT * FROM trainingsdaten WHERE user_id = %s', (user_id,))
-        training_data = cursor.fetchone()
-        
-        if training_data:
-            # Aggregate injuries
-            
-
-            cursor.execute('UPDATE trainingsdaten SET training_sessions = training_sessions + 1, '
-                           'sparring_matches = sparring_matches + %s, '
-                           'injuries = injuries + %s, '
-                           'taps = taps + %s '
-                           'WHERE user_id = %s', 
-                           (sparring_matches, injuries, taps, user_id))
-        else:
-            cursor.execute('INSERT INTO trainingsdaten (user_id, training_sessions, sparring_matches, injuries, taps) VALUES (%s, %s, %s, %s, %s)', 
-                           (user_id, 1, sparring_matches, injuries, taps))
-
         mysql.connection.commit()
         cursor.close()
 
@@ -244,3 +233,40 @@ def delete_technique(technique_id):
 
     flash('Technique deleted successfully!', 'success')
     return redirect(url_for('list_techniques'))
+
+#-------------------------------------------------------------------------------------------------------
+
+
+@app.route('/sesssions')
+def list_sessions():
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('SELECT * FROM sessions WHERE user_id = %s', (session['id'],))
+    sessions = cursor.fetchall()
+    cursor.close()
+
+    return render_template('sessions.html', sessions = sessions)
+
+#-------------------------------------------------------------------------------------------------------
+
+@app.route('/delete_session/<int:session_id>', methods=['POST'])
+def delete_session(session_id):
+    # Check if the user is logged in
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+
+    # Get the user's ID
+    user_id = session['id']
+
+    # Delete the session where the session_id matches and it belongs to the logged-in user
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute('DELETE FROM sessions WHERE id = %s AND user_id = %s', (session_id, user_id))
+    mysql.connection.commit()
+    cursor.close()
+
+    flash('Session deleted successfully!', 'success')
+    return redirect(url_for('home'))
+
+    

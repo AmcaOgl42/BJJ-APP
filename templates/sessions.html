@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}Your Training Sessions{% endblock %}
+
+{% block content %}
+
+<h2>Your Training Sessions</h2>
+
+{% if sessions %}
+    {% for session in sessions %}
+    <div class="form-container">
+        <!-- Display the session date in the top-right corner -->
+        <div style="display: flex; justify-content: space-between;">
+            <h3>Session {{ loop.index }}</h3>
+            <p style="font-weight: bold;">{{ session.date }}</p>
+        </div>
+
+        <!-- Session Details -->
+        <p><strong>Sparring Matches:</strong> {{ session.sparring_matches }}</p>
+        <p><strong>Taps:</strong> {{ session.taps }}</p>
+        <p><strong>Injuries:</strong> {{ session.injuries }}</p>
+
+        <!-- Add a button to delete the session -->
+        <form method="POST" action="{{ url_for('delete_session', session_id=session.id) }}">
+            <button type="submit" class="delete-button">Delete Session</button>
+        </form>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>No training sessions found.</p>
+{% endif %}
+
+{% endblock %}
